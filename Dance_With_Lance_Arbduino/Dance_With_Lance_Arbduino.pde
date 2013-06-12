@@ -23,8 +23,7 @@ scheme
 * 1.14 - FF => Added CalcWattHours function, changing the Sign's data to Watt
 Hours, instead of Watts, in time for BMF VII*/
 
-char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.14. For best
-results connect the Sign!";
+char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.14. For best results connect the Sign!";
 
 /*
 
@@ -45,8 +44,7 @@ void doKnob(){
 
 // GLOBAL VARIABLES
 const int AVG_CYCLES = 50; // average measured values over this many samples
-const int DISPLAY_INTERVAL = 2000; // when auto-display is on, display every
-this many milli-seconds
+const int DISPLAY_INTERVAL = 2000; // when auto-display is on, display every this many milli-seconds
 const int LED_UPDATE_INTERVAL = 1000;
 const int D4_AVG_PERIOD = 10000;
 const int BLINK_PERIOD = 600;
@@ -99,8 +97,7 @@ float amps = 0;
 float watts = 0;
 float wattHours = 0;
 
-int readCount = 0; // for determining how many sample cycle occur per display
-interval
+int readCount = 0; // for determining how many sample cycle occur per display interval
 int avgCount = 0;
 volatile float D4Avg = 0.0;
 float D4AvgCycles = 0;
@@ -374,8 +371,7 @@ float adc2volts(float adc){
 
 // amp sensor conversion factors
 // 0A == 512 adc == 1.65pV // current sensor offset
-// pV/A = .04 pV/A (@5V) * 3.3V/5V = .0264 pV/A (@3.3V) // sensor sensitivity
-(pV = adc input pin volts)
+// pV/A = .04 pV/A (@5V) * 3.3V/5V = .0264 pV/A (@3.3V) // sensor sensitivity (pV = adc input pin volts)
 // adc/pV = 1024 adc / 3.3 pV = 310.3030303030303 adc/pV  // adc per pinVolt
 // adc/A = 310.3030303030303 adc/pV * 0.0264 pV/A = 8.192 adc/A
 // A/adc = 1 A / 8.192 adc = 0.1220703125 A/adc
@@ -397,14 +393,10 @@ void calcWatts(){
 void calcWattHours(){
   wattHours += (int) (D4Avg * 0.0278);
  
-  // This code was written to show accumulated Watt Hours at events. The 0.0278
-factor is 100 divided by the number of seconds in an hour.
-  // In the main loop you can see that calcWattHours is being told to run every
-second. The number printed to the sign is actual watt hours * 10.
-  // So if it says 58, you can tell the pedaler, "you just pedaled 5.8
-WattHours. Thanks!"
-  // Before BMF, change the factor to 0.00278. Then the number printed on the
-Sign will be actual Watt Hours.  
+  // This code was written to show accumulated Watt Hours at events. The 0.0278 factor is 100 divided by the number of seconds in an hour.
+  // In the main loop you can see that calcWattHours is being told to run every second. The number printed to the sign is actual watt hours * 10.
+  // So if it says 58, you can tell the pedaler, "you just pedaled 5.8 WattHours. Thanks!"
+  // Before BMF, change the factor to 0.00278. Then the number printed on the Sign will be actual Watt Hours.  
 }
 
 void printWatts(){

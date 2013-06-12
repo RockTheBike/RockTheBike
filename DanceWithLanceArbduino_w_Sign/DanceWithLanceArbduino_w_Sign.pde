@@ -389,7 +389,8 @@ void calcWattHours(){
   // This code was written to show accumulated Watt Hours at events. The 0.0278 factor is 100 divided by the number of seconds in an hour. 
   // In the main loop you can see that calcWattHours is being told to run every second. The number printed to the sign is actual watt hours * 10. 
   // So if it says 58, you can tell the pedaler, "you just pedaled 5.8 WattHours. Thanks!" 
-  // Before BMF, change the factor to 0.00278. Then the number printed on the Sign will be actual Watt Hours.   
+  // Before BMF, change the factor to 0.00278. 
+  //Then the number printed on the Sign will be actual Watt Hours.   
 }
 
 void printWatts(){

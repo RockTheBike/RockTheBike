@@ -13,6 +13,7 @@
 * 1.9 - TS => cleaned up a bit, added state constants, turn off lowest 2 levels when level 3 and above
 * 1.10 - TS => cleaned up levels / pins variables, changed to a "LEDs" naming scheme
 * 1.11 - TS => does a very slow 4digits watts average, fixed the high blink
+* 1.12 - JS => going to fix watt-hour reset problem reported by paul
 */
 
 char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.11";

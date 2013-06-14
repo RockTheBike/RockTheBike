@@ -1,5 +1,5 @@
 #define baudrate 2400
-#define CLEAR_TIME 150 // 150 is fine
+#define CLEAR_TIME 175 // 150 is fine
 #define SET_TIME 150 // 150 is fine
 #define PEDAL_VOLT 32 // voltage below which sign says PEDAL
 #define CHILL_VOLT 45 // voltage above which sign says CHILL
@@ -238,6 +238,7 @@ void writeDigit(int digitPin, int* segments) {
   delay(CLEAR_TIME);
   digitalWrite(CLEAR_PIN, LOW);  
   if (segments)  delay(SET_TIME);
+  if (segments == pedal[0]) delay(SET_TIME); // give extra time for letter P
   digitalWrite(PEDAL_PIN, LOW);
   digitalWrite(PEDAL_PIN2, LOW);
   digitalWrite(CHILL_PIN, LOW);

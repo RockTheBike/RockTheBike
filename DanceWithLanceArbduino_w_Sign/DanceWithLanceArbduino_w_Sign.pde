@@ -63,7 +63,7 @@ int ledState[NUM_LEDS] = {
   STATE_OFF};
 
 // PINS
-const int relayPin = 13; // relay cutoff output pin
+const int relayPin = 10; // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 const int voltPin = A0; // Voltage Sensor Pin
 const int ampsPin = A3; // Current Sensor Pin
 const int ledPins[NUM_LEDS] = {

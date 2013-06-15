@@ -1,33 +1,34 @@
 /**** Single-rail Pedalometer
-* Arduino code to run the Dance with Lance Arbduino
-* ver. 1.14
-* Written by:
-* Thomas Spellman <thomas@thosmos.com>
-* Jake <jake@spaz.org>
-* Paul@rockthebike.com
-*
-* Notes:
-* 1.6 - moved version to the top, started protocol of commenting every change in file and in Git commit
-* 1.7 - jake 6-21-2012 disable minusalert until minus rail is pedaled at least once (minusAlertEnable and startupMinusVoltage)
-* 1.8 -- FF added annoying light sequence for when relay fails or customer bypasses protection circuitry.+
-* 1.9 - TS => cleaned up a bit, added state constants, turn off lowest 2 levels when level 3 and above
-* 1.10 - TS => cleaned up levels / pins variables, changed to a "LEDs" naming scheme
-* 1.11 - TS => does a very slow 4digits watts average, fixed the high blink
-* 1.12 - TS => printWatts uses D4Avg instead of watts, 300 baud
-* 1.13 - TS => D4Avg fix, 2400 baud
-* 1.14 - FF => Added CalcWattHours function, changing the Sign's data to Watt Hours, instead of Watts, in time for BMF VII*/
+ * Arduino code to run the Dance with Lance Arbduino
+ * ver. 1.14
+ * Written by:
+ * Thomas Spellman <thomas@thosmos.com>
+ * Jake <jake@spaz.org>
+ * Paul@rockthebike.com
+ *
+ * Notes:
+ * 1.6 - moved version to the top, started protocol of commenting every change in file and in Git commit
+ * 1.7 - jake 6-21-2012 disable minusalert until minus rail is pedaled at least once (minusAlertEnable and startupMinusVoltage)
+ * 1.8 -- FF added annoying light sequence for when relay fails or customer bypasses protection circuitry.+
+ * 1.9 - TS => cleaned up a bit, added state constants, turn off lowest 2 levels when level 3 and above
+ * 1.10 - TS => cleaned up levels / pins variables, changed to a "LEDs" naming scheme
+ * 1.11 - TS => does a very slow 4digits watts average, fixed the high blink
+ * 1.12 - TS => printWatts uses D4Avg instead of watts, 300 baud
+ * 1.13 - TS => D4Avg fix, 2400 baud
+ * 1.14 - FF => Added CalcWattHours function, changing the Sign's data to Watt Hours, instead of Watts, in time for BMF VII
+ * 1.15 - JS => started adding buck converter stuff */
 
 char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.14. For best results connect the Sign!";
 
 /*
 
-Check the system voltage.
-Establish desired LED behavior for current voltage.
-Do the desired behavior until the next check.
-
-Repeat.
-
-*/
+ Check the system voltage.
+ Establish desired LED behavior for current voltage.
+ Do the desired behavior until the next check.
+ 
+ Repeat.
+ 
+ */
 
 // FAKE AC POWER VARIABLES
 const int knobPin = A2;
@@ -53,17 +54,20 @@ const int STATE_ON = 2;
 // LEDS
 const int NUM_LEDS = 7; // Number of LED outputs.
 // levels at which each LED turns on (not including special states)
-float ledLevels[NUM_LEDS] = {24.0, 28.0, 32.0, 36.0, 40.0, 44.0, 48.0};
+float ledLevels[NUM_LEDS] = {
+  24.0, 28.0, 32.0, 36.0, 40.0, 44.0, 48.0};
 // current active level
 int ledLevel = -1;
 // on/off/blink/fastblink state of each led
-int ledState[NUM_LEDS] = {STATE_OFF};
+int ledState[NUM_LEDS] = {
+  STATE_OFF};
 
 // PINS
 const int relayPin = 13; // relay cutoff output pin
 const int voltPin = A0; // Voltage Sensor Pin
 const int ampsPin = A3; // Current Sensor Pin
-const int ledPins[NUM_LEDS] = {2, 3, 4, 5, 6, 7, 8};
+const int ledPins[NUM_LEDS] = {
+  2, 3, 4, 5, 6, 7, 8};
 
 // SPECIAL STATE
 const float MAX_VOLTS = 50.0;  //
@@ -82,6 +86,10 @@ const float voltcoeff = 13.25;  // larger number interprets as lower voltage
 int voltsAdc = 0;
 float voltsAdcAvg = 0;
 float volts = 0;
+
+int voltsBuckAdc = 0; // for measuring A1 voltage
+float voltsBuckAvg = 0; // for measuring A1 voltage
+float voltsBuck = 0; // averaged A1 voltage
 
 //Current related variables
 int ampsAdc = 0;
@@ -112,7 +120,6 @@ int i = 0;
 int x = 0;
 int y = 0;
 
-
 void setup() {
   Serial.begin(2400);
 
@@ -131,6 +138,8 @@ void setup() {
   }
 
   timeDisplay = millis();
+  setPwmFrequency(9,1); // this sets the frequency of PWM on pins 9 and 10 to 31,250 Hz
+  pinMode(9,OUTPUT); // this pin will control the transistors of the huge BUCK converter
 }
 
 //int senseLevel = -1;
@@ -138,6 +147,7 @@ void setup() {
 void loop() {
 
   getVolts();
+  doBuck(); // adjust inverter voltage
   doSafety();
 
   getAmps();
@@ -145,21 +155,21 @@ void loop() {
   readCount++;
 
   calcWatts();
-  
-//  if it's been 1 seconds since the last time we measured Watt Hours...
-if (millis() % 1000 == 0) {
-  calcWattHours();
-}
+
+  //  if it's been 1 seconds since the last time we measured Watt Hours...
+  if (millis() % 1000 == 0) {
+    calcWattHours();
+  }
 
   if(avgCount > AVG_CYCLES && D4Initted){
     //tmpD4Avg = D4average(watts, D4Avg);
     D4average();
-//    Serial.print("recalc watts: ");
-//    Serial.print(watts);
-//    Serial.print(", tmpD4Avg: ");
-//    Serial.println(tmpD4Avg);
-//    Serial.print("recalcing D4Avg: ");
-//    Serial.println(D4Avg);
+    //    Serial.print("recalc watts: ");
+    //    Serial.print(watts);
+    //    Serial.print(", tmpD4Avg: ");
+    //    Serial.println(tmpD4Avg);
+    //    Serial.print("recalcing D4Avg: ");
+    //    Serial.println(D4Avg);
     avgCount = 0;
     //D4Avg = tmpD4Avg;
   }
@@ -184,8 +194,8 @@ if (millis() % 1000 == 0) {
       Serial.println(D4AvgCycles);
       D4Initted = true;
     }
-// printWatts();
-  printWattHours();
+    // printWatts();
+    printWattHours();
     //printDisplay();
     //readCount = 0;
     timeDisplay = time;
@@ -198,64 +208,83 @@ float p1, p2, p3 = 0.0;
 float D4average(){
   if(D4Avg < 0.01)
     D4Avg = 0.01;
-//  Serial.print("D4average: watts: ");
-//  Serial.print(watts);
-//  Serial.print(", D4Avg: ");
-//  Serial.print(D4Avg);
-//  Serial.print(", D4AvgCycles: ");
-//  Serial.print(D4AvgCycles);
-//  if(avg == 0.0)
-//    avg = val;
+  //  Serial.print("D4average: watts: ");
+  //  Serial.print(watts);
+  //  Serial.print(", D4Avg: ");
+  //  Serial.print(D4Avg);
+  //  Serial.print(", D4AvgCycles: ");
+  //  Serial.print(D4AvgCycles);
+  //  if(avg == 0.0)
+  //    avg = val;
   p1 = D4Avg * (D4AvgCycles - 1);
-//  Serial.print(", p1: ");
-//  Serial.println(p1);
+  //  Serial.print(", p1: ");
+  //  Serial.println(p1);
   p2 = watts + p1;
-//  Serial.print(", p2: ");
-//  Serial.println(p2);
+  //  Serial.print(", p2: ");
+  //  Serial.println(p2);
   p3 = p2 / D4AvgCycles;
-//  Serial.print(", p3: ");
-//  Serial.println(p3);
+  //  Serial.print(", p3: ");
+  //  Serial.println(p3);
   //return p3;
   D4Avg = p3;
 }
 
+#define BUCK_VOLTAGE 25 // target voltage for buck converter
+#define BUCK_VOLTPIN A1 // this pin measures inverter's MINUS TERMINAL voltage
+#define BUCK_HYSTERESIS 1 // volts above BUCK_VOLTAGE where we start regulatin
+int buckPWM = 0; // PWM value of pin 9
+
+void doBuck() {
+  if (volts <= BUCK_VOLTAGE) {
+    digitalWrite(9,HIGH); // turn transistors fully on, give full voltage to inverter
+    buckPWM = 0;
+  }
+
+  if ((volts > BUCK_VOLTAGE+BUCK_HYSTERESIS) && buckPWM) { // begin PWM action
+    buckPWM = (int) 255.0 * (1 - (volts - voltsBuck) / BUCK_VOLTAGE);
+  }
+
+}
 
 void doSafety() {
-   if (volts > MAX_VOLTS){
-     digitalWrite(relayPin, HIGH);
-     relayState = STATE_ON;
+  if (volts > MAX_VOLTS){
+    digitalWrite(relayPin, HIGH);
+    relayState = STATE_ON;
   }
 
   if (relayState == STATE_ON && volts < RECOVERY_VOLTS){
-     digitalWrite(relayPin, LOW);
-     relayState = STATE_OFF;
+    digitalWrite(relayPin, LOW);
+    relayState = STATE_OFF;
   }
 
   if (volts > DANGER_VOLTS){
-     dangerState = STATE_ON;
-  } else {
-     dangerState = STATE_OFF;
+    dangerState = STATE_ON;
+  } 
+  else {
+    dangerState = STATE_OFF;
   }
 }
 
 void doBlink(){
 
-    if (((time - timeBlink) > BLINK_PERIOD) && blinkState == 1){
-            blinkState = 0;
-            timeBlink = time;
-          } else if (((time - timeBlink) > BLINK_PERIOD) && blinkState == 0){
-             blinkState = 1;
-             timeBlink = time;
-          }
+  if (((time - timeBlink) > BLINK_PERIOD) && blinkState == 1){
+    blinkState = 0;
+    timeBlink = time;
+  } 
+  else if (((time - timeBlink) > BLINK_PERIOD) && blinkState == 0){
+    blinkState = 1;
+    timeBlink = time;
+  }
 
 
-    if (((time - timeFastBlink) > FAST_BLINK_PERIOD) && fastBlinkState == 1){
-            fastBlinkState = 0;
-            timeFastBlink = time;
-          } else if (((time - timeFastBlink) > FAST_BLINK_PERIOD) && fastBlinkState == 0){
-              fastBlinkState = 1;
-             timeFastBlink = time;
-          }
+  if (((time - timeFastBlink) > FAST_BLINK_PERIOD) && fastBlinkState == 1){
+    fastBlinkState = 0;
+    timeFastBlink = time;
+  } 
+  else if (((time - timeFastBlink) > FAST_BLINK_PERIOD) && fastBlinkState == 0){
+    fastBlinkState = 1;
+    timeFastBlink = time;
+  }
 
 }
 
@@ -297,8 +326,8 @@ void doLeds(){
     ledState[ledLevel] = STATE_BLINKFAST;
   }
 
-    // Do the desired states.
-    // loop through each led and turn on/off or adjust PWM
+  // Do the desired states.
+  // loop through each led and turn on/off or adjust PWM
 
   for(i = 0; i < NUM_LEDS; i++) {
     if(ledState[i]==STATE_ON){
@@ -308,16 +337,16 @@ void doLeds(){
       digitalWrite(ledPins[i], LOW);
     }
     else if (ledState[i]==STATE_BLINK && blinkState==1){
-     digitalWrite(ledPins[i], HIGH);
+      digitalWrite(ledPins[i], HIGH);
     }
     else if (ledState[i]==STATE_BLINK && blinkState==0){
-     digitalWrite(ledPins[i], LOW);
+      digitalWrite(ledPins[i], LOW);
     }
     else if (ledState[i]==STATE_BLINKFAST && fastBlinkState==1){
-     digitalWrite(ledPins[i], HIGH);
+      digitalWrite(ledPins[i], HIGH);
     }
     else if (ledState[i]==STATE_BLINKFAST && fastBlinkState==0){
-     digitalWrite(ledPins[i], LOW);
+      digitalWrite(ledPins[i], LOW);
     }
   }
 
@@ -340,6 +369,10 @@ void getVolts(){
   voltsAdc = analogRead(voltPin);
   voltsAdcAvg = average(voltsAdc, voltsAdcAvg);
   volts = adc2volts(voltsAdcAvg);
+
+  voltsBuckAdc = analogRead(BUCK_VOLTPIN);
+  voltsBuckAvg = average(voltsBuckAdc, voltsBuckAvg);
+  voltsBuck = adc2volts(voltsBuckAvg);
 }
 
 float average(float val, float avg){
@@ -350,9 +383,9 @@ float average(float val, float avg){
 
 static int volts2adc(float v){
 
-//adc = v * 10/110/5 * 1024 == v * 18.618181818181818;
+  //adc = v * 10/110/5 * 1024 == v * 18.618181818181818;
 
-return v * voltcoeff;
+  return v * voltcoeff;
 }
 
 
@@ -370,7 +403,7 @@ float adc2volts(float adc){
 // A/adc = 1 A / 8.192 adc = 0.1220703125 A/adc
 
 float adc2amps(float adc){
-    // A/adc = 0.1220703125 A/adc
+  // A/adc = 0.1220703125 A/adc
   return (adc - 512) * 0.1220703125;
   //return adc * (1 / ampcoeff);
 }
@@ -385,12 +418,14 @@ void calcWatts(){
 
 void calcWattHours(){
   wattHours += (int) (D4Avg * 0.0278);
-  
-  // This code was written to show accumulated Watt Hours at events. The 0.0278 factor is 100 divided by the number of seconds in an hour. 
-  // In the main loop you can see that calcWattHours is being told to run every second. The number printed to the sign is actual watt hours * 10. 
-  // So if it says 58, you can tell the pedaler, "you just pedaled 5.8 WattHours. Thanks!" 
-  // Before BMF, change the factor to 0.00278. 
-  //Then the number printed on the Sign will be actual Watt Hours.   
+
+  /* This code was written to show accumulated Watt Hours at events. The 0.0278 factor is 100 divided by the number of 
+   seconds in an hour. 
+   In the main loop you can see that calcWattHours is being told to run every second. The number printed to the sign
+   is actual watt hours * 10. 
+   So if it says 58, you can tell the pedaler, "you just pedaled 5.8 WattHours. Thanks!" 
+   Before BMF, change the factor to 0.00278. 
+   Then the number printed on the Sign will be actual Watt Hours.   */
 }
 
 void printWatts(){
@@ -411,14 +446,77 @@ void printDisplay(){
   Serial.print(", va: ");
   Serial.print(watts);
 
-//  Serial.print(", Levels ");
-//  for(i = 0; i < NUM_LEDS; i++) {
-//    Serial.print(i);
-//    Serial.print(": ");
-//    Serial.print(ledState[i]);
-//    Serial.print(", ");
-//  }
-//  Serial.println("");
+  //  Serial.print(", Levels ");
+  //  for(i = 0; i < NUM_LEDS; i++) {
+  //    Serial.print(i);
+  //    Serial.print(": ");
+  //    Serial.print(ledState[i]);
+  //    Serial.print(", ");
+  //  }
+  //  Serial.println("");
   Serial.println();
 
 }
+
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+    switch(divisor) {
+    case 1: 
+      mode = 0x01; 
+      break;
+    case 8: 
+      mode = 0x02; 
+      break;
+    case 64: 
+      mode = 0x03; 
+      break;
+    case 256: 
+      mode = 0x04; 
+      break;
+    case 1024: 
+      mode = 0x05; 
+      break;
+    default: 
+      return;
+    }
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } 
+    else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } 
+  else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+    case 1: 
+      mode = 0x01; 
+      break;
+    case 8: 
+      mode = 0x02; 
+      break;
+    case 32: 
+      mode = 0x03; 
+      break;
+    case 64: 
+      mode = 0x04; 
+      break;
+    case 128: 
+      mode = 0x05; 
+      break;
+    case 256: 
+      mode = 0x06; 
+      break;
+    case 1024: 
+      mode = 0x7; 
+      break;
+    default: 
+      return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
+}
+
+
+
+

@@ -145,15 +145,12 @@ void setup() {
 //int senseLevel = -1;
 
 void loop() {
-
+  
   getVolts();
   doBuck(); // adjust inverter voltage
   doSafety();
-
   getAmps();
-
   readCount++;
-
   calcWatts();
 
   //  if it's been 1 seconds since the last time we measured Watt Hours...
@@ -188,15 +185,15 @@ void loop() {
     // set up the 4D avg cycles
     if(!D4Initted){
       D4AvgCycles = (30.0 * (float)readCount) / (float)AVG_CYCLES;
-      Serial.print("readCount: ");
-      Serial.println(readCount);
-      Serial.print("D4AvgCycles: ");
-      Serial.println(D4AvgCycles);
+//      Serial.print("readCount: ");
+//      Serial.println(readCount);
+//      Serial.print("D4AvgCycles: ");
+//      Serial.println(D4AvgCycles);
       D4Initted = true;
     }
     // printWatts();
-    printWattHours();
-    //printDisplay();
+//    printWattHours();
+    printDisplay();
     //readCount = 0;
     timeDisplay = time;
   }
@@ -234,7 +231,7 @@ float D4average(){
 #define BUCK_VOLTAGE 25 // target voltage for inverter to be supplied with
 #define BUCK_VOLTPIN A1 // this pin measures inverter's MINUS TERMINAL voltage
 #define BUCK_HYSTERESIS 1 // volts above BUCK_VOLTAGE where we start regulatin
-#define BUCK_PWM_JUMP 0.5 // amount to change PWM value if voltage is off by HYSTERESIS
+#define BUCK_PWM_JUMP 2.5 // amount to change PWM value if voltage is off by HYSTERESIS
 float buckPWM = 0; // PWM value of pin 9
 int lastBuckPWM = 0; // make sure we don't call analogWrite if already set right
 
@@ -255,17 +252,22 @@ void doBuck() {
     if ((volts > BUCK_VOLTAGE) && (buckPWM != 0)) { // adjust PWM value based on results
       if (volts - voltsBuck > BUCK_VOLTAGE + BUCK_HYSTERESIS) { // inverter voltage is too high
         buckPWM -= BUCK_PWM_JUMP; // reduce PWM value to reduce inverter voltage
-        if (buckPWM <= 0) Serial.println("BUCK VALUE LESS THAN OR EQUAL TO ZERO!?!?");
+        if (buckPWM <= 0) Serial.println("B<=0!?!?");
         if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
           lastBuckPWM = (int) buckPWM;
+          Serial.print("-");
           analogWrite(9,lastBuckPWM); // actually set the PWM value
         }
       }
       if (volts - voltsBuck < BUCK_VOLTAGE) { // inverter voltage is too low
         buckPWM += BUCK_PWM_JUMP; // increase PWM value to raise inverter voltage
-        if (buckPWM >= 255) Serial.println("BUCK VALUE GREATER THAN OR EQUAL TO 255!?!?");
+        if (buckPWM > 255.0) {
+          buckPWM = 255.0;
+          Serial.print("B=255");
+        }
         if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
           lastBuckPWM = (int) buckPWM;
+          Serial.print("+");
           analogWrite(9,lastBuckPWM); // actually set the PWM value
         }
       }

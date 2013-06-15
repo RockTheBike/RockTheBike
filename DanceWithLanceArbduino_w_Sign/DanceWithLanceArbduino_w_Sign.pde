@@ -1,3 +1,4 @@
+#define BAUD_RATE 57600 // 2400 for use with sign
 /**** Single-rail Pedalometer
  * Arduino code to run the Dance with Lance Arbduino
  * ver. 1.14
@@ -121,7 +122,7 @@ int x = 0;
 int y = 0;
 
 void setup() {
-  Serial.begin(2400);
+  Serial.begin(BAUD_RATE);
 
   Serial.println(versionStr);
 

@@ -229,21 +229,51 @@ float D4average(){
   D4Avg = p3;
 }
 
-#define BUCK_VOLTAGE 25 // target voltage for buck converter
+#define BUCK_CUTIN 13 // voltage above which transistors can start working
+#define BUCK_CUTOUT 11 // voltage below which transistors can not function
+#define BUCK_VOLTAGE 25 // target voltage for inverter to be supplied with
 #define BUCK_VOLTPIN A1 // this pin measures inverter's MINUS TERMINAL voltage
 #define BUCK_HYSTERESIS 1 // volts above BUCK_VOLTAGE where we start regulatin
-int buckPWM = 0; // PWM value of pin 9
+#define BUCK_PWM_JUMP 0.5 // amount to change PWM value if voltage is off by HYSTERESIS
+float buckPWM = 0; // PWM value of pin 9
+int lastBuckPWM = 0; // make sure we don't call analogWrite if already set right
 
 void doBuck() {
-  if (volts <= BUCK_VOLTAGE) {
-    digitalWrite(9,HIGH); // turn transistors fully on, give full voltage to inverter
-    buckPWM = 0;
-  }
+  if (volts > BUCK_CUTIN) { // voltage is high enough to turn on transistors
+    if (volts <= BUCK_VOLTAGE) { // system voltage is lower than inverter target voltage
+      digitalWrite(9,HIGH); // turn transistors fully on, give full voltage to inverter
+      buckPWM = 0;
+    }
 
-  if ((volts > BUCK_VOLTAGE+BUCK_HYSTERESIS) && buckPWM) { // begin PWM action
-    buckPWM = (int) 255.0 * (1 - (volts - voltsBuck) / BUCK_VOLTAGE);
-  }
+    if ((volts > BUCK_VOLTAGE+BUCK_HYSTERESIS) && (buckPWM == 0)) { // begin PWM action
+      buckPWM = 255.0 * (1.0 - ((volts - BUCK_VOLTAGE) / BUCK_VOLTAGE)); // best guess for initial PWM value
+      Serial.print("buckval=");
+      Serial.println(buckPWM);
+      analogWrite(9,(int) buckPWM); // actually set the thing in motion
+    }
 
+    if ((volts > BUCK_VOLTAGE) && (buckPWM != 0)) { // adjust PWM value based on results
+      if (volts - voltsBuck > BUCK_VOLTAGE + BUCK_HYSTERESIS) { // inverter voltage is too high
+        buckPWM -= BUCK_PWM_JUMP; // reduce PWM value to reduce inverter voltage
+        if (buckPWM <= 0) Serial.println("BUCK VALUE LESS THAN OR EQUAL TO ZERO!?!?");
+        if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
+          lastBuckPWM = (int) buckPWM;
+          analogWrite(9,lastBuckPWM); // actually set the PWM value
+        }
+      }
+      if (volts - voltsBuck < BUCK_VOLTAGE) { // inverter voltage is too low
+        buckPWM += BUCK_PWM_JUMP; // increase PWM value to raise inverter voltage
+        if (buckPWM >= 255) Serial.println("BUCK VALUE GREATER THAN OR EQUAL TO 255!?!?");
+        if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
+          lastBuckPWM = (int) buckPWM;
+          analogWrite(9,lastBuckPWM); // actually set the PWM value
+        }
+      }
+    }
+  } 
+  if (volts < BUCK_CUTOUT) { // system voltage is too low for transistors
+    digitalWrite(9,LOW); // turn off transistors
+  }
 }
 
 void doSafety() {
@@ -516,6 +546,10 @@ void setPwmFrequency(int pin, int divisor) {
     TCCR2B = TCCR2B & 0b11111000 | mode;
   }
 }
+
+
+
+
 
 
 

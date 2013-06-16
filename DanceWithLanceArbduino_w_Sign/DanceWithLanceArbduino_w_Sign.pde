@@ -155,8 +155,8 @@ void loop() {
   readCount++;
   calcWatts();
 
-  //  if it's been at least 1 second since the last time we measured Watt Hours...
-  if (time - wattHourTimer >= 1000) {
+  //  if it's been at least 1/4 second since the last time we measured Watt Hours...
+  if (time - wattHourTimer >= 250) {
     calcWattHours();
     wattHourTimer = time; // reset the integrator    
   }
@@ -391,12 +391,12 @@ void doLeds(){
 } // END doLeds()
 
 
-int ampsCompensation = 2;
+int ampsCompensation = 2; // wtf is this?
 void getAmps(){
+//  ampsAdc = analogRead(ampsPin);
+//  ampsAdc = analogRead(ampsPin);
   ampsAdc = analogRead(ampsPin);
-  ampsAdc = analogRead(ampsPin);
-  ampsAdc = analogRead(ampsPin);
-  ampsAdc = ampsAdc + ampsCompensation;
+  ampsAdc += ampsCompensation;
   ampsAdcAvg = average(ampsAdc, ampsAdcAvg);
   amps = adc2amps(ampsAdcAvg);
   avgCount++;
@@ -455,8 +455,8 @@ void calcWatts(){
 }
 
 void calcWattHours(){
-  wattHours += (D4Avg * ((time - wattHourTimer) / 1000.0) / 3600.0); // measure actual watt-hours
-//wattHours += average watts * actual time in seconds / seconds per hour
+  wattHours += (watts * ((time - wattHourTimer) / 1000.0) / 3600.0); // measure actual watt-hours
+//wattHours +=  watts *     actual timeslice / in seconds / seconds per hour
   
   /* This code was written to show accumulated Watt Hours at events. 
    The 0.0278 factor is 100 divided by the number of seconds in an hour.

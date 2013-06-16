@@ -35,7 +35,8 @@ char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.14. For best result
 const int knobPin = A2;
 int knobAdc = 0;
 void doKnob(){
-  knobAdc = analogRead(knobPin);
+  knobAdc = analogRead(knobPin) - 10; // make sure not to add if knob is off
+  if (knobAdc < 0) knobAdc = 0; // values 0-10 count as zero
 }
 
 // GLOBAL VARIABLES
@@ -146,7 +147,7 @@ void setup() {
 //int senseLevel = -1;
 
 void loop() {
-  
+  time = millis();
   getVolts();
   doBuck(); // adjust inverter voltage
   doSafety();
@@ -154,9 +155,10 @@ void loop() {
   readCount++;
   calcWatts();
 
-  //  if it's been 1 seconds since the last time we measured Watt Hours...
-  if (millis() % 1000 == 0) {
+  //  if it's been at least 1 second since the last time we measured Watt Hours...
+  if (time - wattHourTimer >= 1000) {
     calcWattHours();
+    wattHourTimer = time; // reset the integrator    
   }
 
   if(avgCount > AVG_CYCLES && D4Initted){
@@ -172,7 +174,6 @@ void loop() {
     //D4Avg = tmpD4Avg;
   }
 
-  time = millis();
 
   // blink the LEDs
   doBlink();
@@ -454,14 +455,15 @@ void calcWatts(){
 }
 
 void calcWattHours(){
-  wattHours += (int) (D4Avg * 0.0278);
-
-  /* This code was written to show accumulated Watt Hours at events. The 0.0278 factor is 100 divided by the number of 
-   seconds in an hour. 
-   In the main loop you can see that calcWattHours is being told to run every second. The number printed to the sign
-   is actual watt hours * 10. 
+  wattHours += (D4Avg * ((time - wattHourTimer) / 1000.0) / 3600.0); // measure actual watt-hours
+//wattHours += average watts * actual time in seconds / seconds per hour
+  
+  /* This code was written to show accumulated Watt Hours at events. 
+   The 0.0278 factor is 100 divided by the number of seconds in an hour.
+   In the main loop you can see that calcWattHours is being told to run every second.
+   The number printed to the sign is actual watt hours * 10. 
    So if it says 58, you can tell the pedaler, "you just pedaled 5.8 WattHours. Thanks!" 
-   Before BMF, change the factor to 0.00278. 
+   Before BMF, change the factor to 0.00278. (why?)
    Then the number printed on the Sign will be actual Watt Hours.   */
 }
 
@@ -471,8 +473,10 @@ void printWatts(){
 }
 
 void printWattHours(){
-  Serial.print("w");
-  Serial.println(wattHours);
+  Serial.print("w"); // tell the sign to print the following number
+//  Serial.println(wattHours,1); // print just the number of watt-hours
+  Serial.println(wattHours*10,1); // if you want to print tenths of a watt-hour  
+  // the sign will ignore printed decimal point and digits after it!
 }
 
 void printDisplay(){

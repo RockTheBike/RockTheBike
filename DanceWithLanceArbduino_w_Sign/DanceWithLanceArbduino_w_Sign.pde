@@ -194,7 +194,7 @@ void loop() {
       D4Initted = true;
     }
     // printWatts();
-//    printWattHours();
+    printWattHours();
     printDisplay();
     //readCount = 0;
     timeDisplay = time;
@@ -234,7 +234,7 @@ float D4average(){
 #define BUCK_VOLTPIN A1 // this pin measures inverter's MINUS TERMINAL voltage
 #define BUCK_HYSTERESIS 0.75 // volts above BUCK_VOLTAGE where we start regulatin
 #define BUCK_PWM_UPJUMP 0.15 // amount to raise PWM value if voltage is below BUCK_VOLTAGE
-#define BUCK_PWM_DOWNJUMP 1.5 // amount to lower PWM value if voltage is too high
+#define BUCK_PWM_DOWNJUMP 0.75 // amount to lower PWM value if voltage is too high
 float buckPWM = 0; // PWM value of pin 9
 int lastBuckPWM = 0; // make sure we don't call analogWrite if already set right
 
@@ -474,9 +474,9 @@ void printWatts(){
 
 void printWattHours(){
   Serial.print("w"); // tell the sign to print the following number
-//  Serial.println(wattHours,1); // print just the number of watt-hours
-  Serial.println(wattHours*10,1); // if you want to print tenths of a watt-hour  
-  // the sign will ignore printed decimal point and digits after it!
+//  the sign will ignore printed decimal point and digits after it!
+  Serial.println(wattHours,1); // print just the number of watt-hours
+//  Serial.println(wattHours*10,1); // for this you must put a decimal point onto the sign!
 }
 
 void printDisplay(){

@@ -21,15 +21,10 @@
  * 2.09 - JS => changed to split_rail_48v_4level, adding PWM for LED pedalometer  */
 char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.14. For best results connect the Sign!";
 
-/*
-
- Check the system voltage.
- Establish desired LED behavior for current voltage.
- Do the desired behavior until the next check.
- 
- Repeat.
- 
- */
+#define brightnessVoltage  28.0  // voltage at which LED brightness starts to fold back
+#define brightnessBase 255  // maximum brightness value (255 is max value here)
+int brightness = 0;  // analogWrite brightness value, updated by getVoltageAndBrightness()
+#define brightnessFactor 4.57 // the factor by which PWM is reduced upon higher system voltage for LEDs
 
 // FAKE AC POWER VARIABLES
 const int knobPin = A2;
@@ -46,8 +41,6 @@ const int LED_UPDATE_INTERVAL = 1000;
 const int D4_AVG_PERIOD = 10000;
 const int BLINK_PERIOD = 600;
 const int FAST_BLINK_PERIOD = 150;
-
-#define max////////
 
 // STATE CONSTANTS
 const int STATE_OFF = 0;
@@ -373,19 +366,22 @@ void doLeds(){
 
   for(i = 0; i < NUM_LEDS; i++) {
     if(ledState[i]==STATE_ON){
-      digitalWrite(ledPins[i], HIGH);
+      //      digitalWrite(ledPins[i], HIGH);
+      analogWrite(ledPins[i], brightness);
     }
     else if (ledState[i]==STATE_OFF){
       digitalWrite(ledPins[i], LOW);
     }
     else if (ledState[i]==STATE_BLINK && blinkState==1){
-      digitalWrite(ledPins[i], HIGH);
+      //      digitalWrite(ledPins[i], HIGH);
+      analogWrite(ledPins[i], brightness);
     }
     else if (ledState[i]==STATE_BLINK && blinkState==0){
       digitalWrite(ledPins[i], LOW);
     }
     else if (ledState[i]==STATE_BLINKFAST && fastBlinkState==1){
-      digitalWrite(ledPins[i], HIGH);
+      //      digitalWrite(ledPins[i], HIGH);
+      analogWrite(ledPins[i], brightness);
     }
     else if (ledState[i]==STATE_BLINKFAST && fastBlinkState==0){
       digitalWrite(ledPins[i], LOW);
@@ -415,6 +411,13 @@ void getVolts(){
   voltsBuckAdc = analogRead(BUCK_VOLTPIN);
   voltsBuckAvg = average(voltsBuckAdc, voltsBuckAvg);
   voltsBuck = adc2volts(voltsBuckAvg);
+
+  //  brightness = 255 - brightnessBase * (1.0 - (brightnessKnobFactor * (1023 - analogRead(knobpin))));  // the knob affects brightnes
+
+  brightness = brightnessBase;  // full brightness unless dimming is required
+  if (volts > brightnessVoltage)
+    brightness -= (brightnessFactor * (volts - brightnessVoltage));  // brightness is reduced by overvoltage
+  // this means if voltage is 28 volts over, PWM will be 255 - (28*4.57) or 127, 50% duty cycle
 }
 
 float average(float val, float avg){
@@ -566,6 +569,8 @@ void setPwmFrequency(int pin, int divisor) {
     TCCR2B = TCCR2B & 0b11111000 | mode;
   }
 }
+
+
 
 
 

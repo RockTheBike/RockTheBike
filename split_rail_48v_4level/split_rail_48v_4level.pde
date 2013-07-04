@@ -47,6 +47,8 @@ const int D4_AVG_PERIOD = 10000;
 const int BLINK_PERIOD = 600;
 const int FAST_BLINK_PERIOD = 150;
 
+#define max////////
+
 // STATE CONSTANTS
 const int STATE_OFF = 0;
 const int STATE_BLINK = 1;
@@ -66,12 +68,12 @@ int ledState[NUM_LEDS] = {
   STATE_OFF};
 
 // PINS
-const int relayPin = 10; // relay cutoff output pin // NEVER USE 13 FOR A RELAY
+const int relayPin = 2; // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 const int voltPin = A0; // Voltage Sensor Pin
 const int ampsPin = A3; // Current Sensor Pin
 const int ledPins[NUM_LEDS] = {
   //  2, 3, 4, 5, 6, 7, 8};
-  3, 5, 6, 9};
+  3, 9, 10, 11};
 
 // SPECIAL STATE
 const float MAX_VOLTS = 50.0;  //
@@ -142,8 +144,9 @@ void setup() {
   }
 
   timeDisplay = millis();
+  setPwmFrequency(3,1); // this sets the frequency of PWM on pins 3 and 11 to 31,250 Hz
   setPwmFrequency(9,1); // this sets the frequency of PWM on pins 9 and 10 to 31,250 Hz
-  pinMode(9,OUTPUT); // this pin will control the transistors of the huge BUCK converter
+  //  pinMode(9,OUTPUT); // this pin will control the transistors of the huge BUCK converter
 }
 
 //int senseLevel = -1;
@@ -481,8 +484,9 @@ void printWattHours(){
 }
 
 void printDisplay(){
-  Serial.print("v: ");
   Serial.print(volts);
+  Serial.print("v (");
+  Serial.println(analogRead(voltPin));
   //  Serial.print(", a: ");
   //  Serial.print(amps);
   //  Serial.print(", va: ");
@@ -562,6 +566,7 @@ void setPwmFrequency(int pin, int divisor) {
     TCCR2B = TCCR2B & 0b11111000 | mode;
   }
 }
+
 
 
 

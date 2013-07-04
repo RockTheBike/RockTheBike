@@ -54,10 +54,11 @@ const int STATE_BLINKFAST = 3;
 const int STATE_ON = 2;
 
 // LEDS
-const int NUM_LEDS = 7; // Number of LED outputs.
+const int NUM_LEDS = 4; // Number of LED outputs.
 // levels at which each LED turns on (not including special states)
 float ledLevels[NUM_LEDS] = {
-  24.0, 28.0, 32.0, 36.0, 40.0, 44.0, 48.0};
+  24.0, 32.0, 40.0, 48.0};
+//  24.0, 28.0, 32.0, 36.0, 40.0, 44.0, 48.0};
 // current active level
 int ledLevel = -1;
 // on/off/blink/fastblink state of each led
@@ -69,7 +70,8 @@ const int relayPin = 10; // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 const int voltPin = A0; // Voltage Sensor Pin
 const int ampsPin = A3; // Current Sensor Pin
 const int ledPins[NUM_LEDS] = {
-  2, 3, 4, 5, 6, 7, 8};
+  //  2, 3, 4, 5, 6, 7, 8};
+  3, 5, 6, 9};
 
 // SPECIAL STATE
 const float MAX_VOLTS = 50.0;  //
@@ -560,6 +562,7 @@ void setPwmFrequency(int pin, int divisor) {
     TCCR2B = TCCR2B & 0b11111000 | mode;
   }
 }
+
 
 
 

@@ -2,7 +2,7 @@
 #define CLEAR_TIME 175 // 150 is fine
 #define SET_TIME 150 // 150 is fine
 #define PEDAL_VOLT 32 // voltage below which sign says PEDAL
-#define CHILL_VOLT 45 // voltage above which sign says CHILL
+#define CHILL_VOLT 48 // voltage above which sign says CHILL
 #define HYSTERESIS 1 // voltage distance before sign switches back to wattage mode
 
 /*
@@ -88,62 +88,62 @@ int state = WATTS_STATE;
 
 int numbers[10][7] = {
   { 
-    1, 1, 1, 1, 1, 1, 0         }
+    1, 1, 1, 1, 1, 1, 0           }
   , // 0
   { 
-    0, 1, 1, 0, 0, 0, 0         }
+    0, 1, 1, 0, 0, 0, 0           }
   , // 1
   { 
-    1, 1, 0, 1, 1, 0, 1         }
+    1, 1, 0, 1, 1, 0, 1           }
   , // 2
   { 
-    1, 1, 1, 1, 0, 0, 1         }
+    1, 1, 1, 1, 0, 0, 1           }
   , // 3
   { 
-    0, 1, 1, 0, 0, 1, 1         }
+    0, 1, 1, 0, 0, 1, 1           }
   , // 4
   { 
-    1, 0, 1, 1, 0, 1, 1         }
+    1, 0, 1, 1, 0, 1, 1           }
   , // 5
   { 
-    1, 0, 1, 1, 1, 1, 1         }
+    1, 0, 1, 1, 1, 1, 1           }
   , // 6
   { 
-    1, 1, 1, 0, 0, 0, 0         }
+    1, 1, 1, 0, 0, 0, 0           }
   , // 7
   { 
-    1, 1, 1, 1, 1, 1, 1         }
+    1, 1, 1, 1, 1, 1, 1           }
   , // 8
   { 
-    1, 1, 1, 1, 0, 1, 1         }  // 9
+    1, 1, 1, 1, 0, 1, 1           }  // 9
 };
 
 int pedal[4][7] = {
   { 
-    1, 0, 0, 1, 1, 1, 1         }
+    1, 0, 0, 1, 1, 1, 1           }
   , // E
   { 
-    1, 1, 1, 1, 1, 1, 0         }
+    1, 1, 1, 1, 1, 1, 0           }
   , // D
   { 
-    1, 1, 1, 0, 1, 1, 1         }
+    1, 1, 1, 0, 1, 1, 1           }
   , // A
   { 
-    0, 0, 0, 1, 1, 1, 0         }  // L
+    0, 0, 0, 1, 1, 1, 0           }  // L
 };
 
 int chill[4][7] =  { 
   { 
-    0, 1, 1, 0, 1, 1, 1         }
+    0, 1, 1, 0, 1, 1, 1           }
   , // H
   { 
-    0, 0, 0, 0, 1, 1, 0         }
+    0, 0, 0, 0, 1, 1, 0           }
   , // I
   { 
-    0, 0, 0, 1, 1, 1, 0         }
+    0, 0, 0, 1, 1, 1, 0           }
   , // L
   { 
-    0, 0, 0, 1, 1, 1, 0         }  // L
+    0, 0, 0, 1, 1, 1, 0           }  // L
 };
 
 
@@ -170,7 +170,7 @@ void setup() {
 void checkSerial() {
   if (Serial.available() > 0) {
     inByte = Serial.read();
-//    Serial.print(inByte);
+    //    Serial.print(inByte);
     if (inByte == wattChar) { // the wattage is being sent!
       dataIndex = 0;
       dataCount = 0;
@@ -194,13 +194,13 @@ void checkSerial() {
     for (int i = 0; i < dataCount; i++) {
       wattage += (data[i+1] * scale);
       //      Serial.print(data[i+1]);
-//      Serial.println(scale);
+      //      Serial.println(scale);
       scale /= 10;
     }
     dataIndex = 0;
     dataCount = 0;
     dataReady = true; // we got new data
-//    Serial.println(wattage);
+    //    Serial.println(wattage);
   }
 }
 
@@ -270,7 +270,7 @@ void loop() {
 
   if ((voltage < PEDAL_VOLT) && (state != PEDAL_STATE)) {
     //  if (wattage > 6000) { // for testing
-//    Serial.println("pedal");
+    //    Serial.println("pedal");
     for (int i = 0; i < NUM_DIGITS; ++i) {
       writeDigit(digitPins[i], pedal[i]); // EDAL (PEDAL)
     }
@@ -279,14 +279,14 @@ void loop() {
   } 
   else if ((voltage > CHILL_VOLT) && (state != CHILL_STATE)) {
     //  else if ((wattage < 4000) && (wattage > 1000)) {   // for testing
-//    Serial.println("chill");    
+    //    Serial.println("chill");    
     for (int i = 0; i < NUM_DIGITS; ++i) {
       writeDigit(digitPins[i], chill[i]); // HILL (CHILL)
     }
     state = CHILL_STATE;
     lastUpdate = millis();
   }  
-  
+
   if (millis() - lastUpdate > updateTime) if ((state == CHILL_STATE) || (state == PEDAL_STATE)) state = 7;  // make sign re-update word
 
   if ((voltage <= (CHILL_VOLT - HYSTERESIS)) && (voltage >= (PEDAL_VOLT + HYSTERESIS)) && (state != WATTS_STATE)) {
@@ -295,14 +295,14 @@ void loop() {
   }
 
   /*    int scale = 1;
-         for (int i = 0; i < NUM_DIGITS; ++i) {
+   for (int i = 0; i < NUM_DIGITS; ++i) {
    writeDigit(digitPins[i], numbers[(int)(wattage / scale) % 10]);
    scale *= 10;
    } */
 
 
   if ((dataReady == true) && (state == WATTS_STATE)) {
-//    Serial.println("watts");    
+    //    Serial.println("watts");    
     if (wattage > 999) writeDigit(digitPins[0],numbers[(int)(wattage / 1000) % 10]);
     else  writeDigit(digitPins[0],NULL);
     if (wattage > 99) writeDigit(digitPins[1],numbers[(int)(wattage / 100) % 10]);
@@ -318,13 +318,14 @@ void loop() {
   //  Serial.print("A (");
   //  Serial.print(ampraw);
   //  Serial.print(")  ");
-//  Serial.print(voltage);
-//  Serial.print("V (");
-//  Serial.print(voltraw);
-//  Serial.print(")  w=");
-//  Serial.println(wattage);
-//  delay(100);
+  //  Serial.print(voltage);
+  //  Serial.print("V (");
+  //  Serial.print(voltraw);
+  //  Serial.print(")  w=");
+  //  Serial.println(wattage);
+  //  delay(100);
 }
+
 
 
 

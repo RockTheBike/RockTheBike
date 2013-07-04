@@ -149,14 +149,14 @@ void setup() {
 void loop() {
   time = millis();
   getVolts();
-  doBuck(); // adjust inverter voltage
+//  doBuck(); // adjust inverter voltage
   doSafety();
-  getAmps();
+//  getAmps();
   readCount++;
-  calcWatts();
+//  calcWatts();
 
   //  if it's been at least 1/4 second since the last time we measured Watt Hours...
-  if (time - wattHourTimer >= 250) {
+/*  if (time - wattHourTimer >= 250) {
     calcWattHours();
     wattHourTimer = time; // reset the integrator    
   }
@@ -173,17 +173,10 @@ void loop() {
     avgCount = 0;
     //D4Avg = tmpD4Avg;
   }
-
-
-  // blink the LEDs
-  doBlink();
-
-  doLeds();
-
+*/
   //Now show the - Team how hard to pedal.
   if(time - timeDisplay > DISPLAY_INTERVAL){
-
-    //Serial.println("display");
+/*
     // set up the 4D avg cycles
     if(!D4Initted){
       D4AvgCycles = (30.0 * (float)readCount) / (float)AVG_CYCLES;
@@ -193,8 +186,14 @@ void loop() {
 //      Serial.println(D4AvgCycles);
       D4Initted = true;
     }
+*/
+
+  doBlink();  // blink the LEDs
+
+  doLeds();
+
     // printWatts();
-    printWattHours();
+//    printWattHours();
     printDisplay();
     //readCount = 0;
     timeDisplay = time;

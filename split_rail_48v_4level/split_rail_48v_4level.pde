@@ -149,51 +149,51 @@ void setup() {
 void loop() {
   time = millis();
   getVolts();
-//  doBuck(); // adjust inverter voltage
+  //  doBuck(); // adjust inverter voltage
   doSafety();
-//  getAmps();
+  //  getAmps();
   readCount++;
-//  calcWatts();
+  //  calcWatts();
 
   //  if it's been at least 1/4 second since the last time we measured Watt Hours...
-/*  if (time - wattHourTimer >= 250) {
-    calcWattHours();
-    wattHourTimer = time; // reset the integrator    
-  }
-
-  if(avgCount > AVG_CYCLES && D4Initted){
-    //tmpD4Avg = D4average(watts, D4Avg);
-    D4average();
-    //    Serial.print("recalc watts: ");
-    //    Serial.print(watts);
-    //    Serial.print(", tmpD4Avg: ");
-    //    Serial.println(tmpD4Avg);
-    //    Serial.print("recalcing D4Avg: ");
-    //    Serial.println(D4Avg);
-    avgCount = 0;
-    //D4Avg = tmpD4Avg;
-  }
-*/
+  /*  if (time - wattHourTimer >= 250) {
+   calcWattHours();
+   wattHourTimer = time; // reset the integrator    
+   }
+   
+   if(avgCount > AVG_CYCLES && D4Initted){
+   //tmpD4Avg = D4average(watts, D4Avg);
+   D4average();
+   //    Serial.print("recalc watts: ");
+   //    Serial.print(watts);
+   //    Serial.print(", tmpD4Avg: ");
+   //    Serial.println(tmpD4Avg);
+   //    Serial.print("recalcing D4Avg: ");
+   //    Serial.println(D4Avg);
+   avgCount = 0;
+   //D4Avg = tmpD4Avg;
+   }
+   */
   //Now show the - Team how hard to pedal.
   if(time - timeDisplay > DISPLAY_INTERVAL){
-/*
+    /*
     // set up the 4D avg cycles
-    if(!D4Initted){
-      D4AvgCycles = (30.0 * (float)readCount) / (float)AVG_CYCLES;
-//      Serial.print("readCount: ");
-//      Serial.println(readCount);
-//      Serial.print("D4AvgCycles: ");
-//      Serial.println(D4AvgCycles);
-      D4Initted = true;
-    }
-*/
+     if(!D4Initted){
+     D4AvgCycles = (30.0 * (float)readCount) / (float)AVG_CYCLES;
+     //      Serial.print("readCount: ");
+     //      Serial.println(readCount);
+     //      Serial.print("D4AvgCycles: ");
+     //      Serial.println(D4AvgCycles);
+     D4Initted = true;
+     }
+     */
 
-  doBlink();  // blink the LEDs
+    doBlink();  // blink the LEDs
 
-  doLeds();
+    doLeds();
 
     // printWatts();
-//    printWattHours();
+    //    printWattHours();
     printDisplay();
     //readCount = 0;
     timeDisplay = time;
@@ -246,8 +246,8 @@ void doBuck() {
 
     if ((volts > BUCK_VOLTAGE+BUCK_HYSTERESIS) && (buckPWM == 0)) { // begin PWM action
       buckPWM = 255.0 * (1.0 - ((volts - BUCK_VOLTAGE) / BUCK_VOLTAGE)); // best guess for initial PWM value
-//      Serial.print("buckval=");
-//      Serial.println(buckPWM);
+      //      Serial.print("buckval=");
+      //      Serial.println(buckPWM);
       analogWrite(9,(int) buckPWM); // actually set the thing in motion
     }
 
@@ -255,12 +255,12 @@ void doBuck() {
       if (volts - voltsBuck > BUCK_VOLTAGE + BUCK_HYSTERESIS) { // inverter voltage is too high
         buckPWM -= BUCK_PWM_DOWNJUMP; // reduce PWM value to reduce inverter voltage
         if (buckPWM <= 0) {
-//          Serial.print("0");
+          //          Serial.print("0");
           buckPWM = 1; // minimum PWM value
         }
         if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
           lastBuckPWM = (int) buckPWM;
-//          Serial.print("-");
+          //          Serial.print("-");
           analogWrite(9,lastBuckPWM); // actually set the PWM value
         }
       }
@@ -268,11 +268,11 @@ void doBuck() {
         buckPWM += BUCK_PWM_UPJUMP; // increase PWM value to raise inverter voltage
         if (buckPWM > 255.0) {
           buckPWM = 255.0;
-//          Serial.print("X");
+          //          Serial.print("X");
         }
         if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
           lastBuckPWM = (int) buckPWM;
-//          Serial.print("+");
+          //          Serial.print("+");
           analogWrite(9,lastBuckPWM); // actually set the PWM value
         }
       }
@@ -392,8 +392,8 @@ void doLeds(){
 
 int ampsCompensation = 2; // wtf is this?
 void getAmps(){
-//  ampsAdc = analogRead(ampsPin);
-//  ampsAdc = analogRead(ampsPin);
+  //  ampsAdc = analogRead(ampsPin);
+  //  ampsAdc = analogRead(ampsPin);
   ampsAdc = analogRead(ampsPin);
   ampsAdc += ampsCompensation;
   ampsAdcAvg = average(ampsAdc, ampsAdcAvg);
@@ -455,8 +455,8 @@ void calcWatts(){
 
 void calcWattHours(){
   wattHours += (watts * ((time - wattHourTimer) / 1000.0) / 3600.0); // measure actual watt-hours
-//wattHours +=  watts *     actual timeslice / in seconds / seconds per hour
-  
+  //wattHours +=  watts *     actual timeslice / in seconds / seconds per hour
+
   /* This code was written to show accumulated Watt Hours at events. 
    The 0.0278 factor is 100 divided by the number of seconds in an hour.
    In the main loop you can see that calcWattHours is being told to run every second.
@@ -473,22 +473,22 @@ void printWatts(){
 
 void printWattHours(){
   Serial.print("w"); // tell the sign to print the following number
-//  the sign will ignore printed decimal point and digits after it!
+  //  the sign will ignore printed decimal point and digits after it!
   Serial.println(wattHours,1); // print just the number of watt-hours
-//  Serial.println(wattHours*10,1); // for this you must put a decimal point onto the sign!
+  //  Serial.println(wattHours*10,1); // for this you must put a decimal point onto the sign!
 }
 
 void printDisplay(){
   Serial.print("v: ");
   Serial.print(volts);
-//  Serial.print(", a: ");
-//  Serial.print(amps);
-//  Serial.print(", va: ");
-//  Serial.print(watts);
-//  Serial.print(", voltsBuck: ");
-//  Serial.print(voltsBuck);
-//  Serial.print(", inverter: ");
-//  Serial.print(volts-voltsBuck);
+  //  Serial.print(", a: ");
+  //  Serial.print(amps);
+  //  Serial.print(", va: ");
+  //  Serial.print(watts);
+  //  Serial.print(", voltsBuck: ");
+  //  Serial.print(voltsBuck);
+  //  Serial.print(", inverter: ");
+  //  Serial.print(volts-voltsBuck);
 
   //  Serial.print(", Levels ");
   //  for(i = 0; i < NUM_LEDS; i++) {
@@ -560,6 +560,7 @@ void setPwmFrequency(int pin, int divisor) {
     TCCR2B = TCCR2B & 0b11111000 | mode;
   }
 }
+
 
 
 

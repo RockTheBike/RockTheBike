@@ -345,9 +345,9 @@ void doLeds(){
   }
 
   // turn off first 2 levels if voltage is above 3rd level
-  if(volts > ledLevels[2]){
+  if(volts > ledLevels[1]){
     ledState[0] = STATE_OFF;
-    ledState[1] = STATE_OFF;
+//    ledState[1] = STATE_OFF;
   }
 
   if (dangerState){

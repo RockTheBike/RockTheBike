@@ -68,6 +68,7 @@ int ledState[NUM_LEDS] = {
   STATE_OFF};
 
 // PINS
+#define ledPin 13  // use #define instead of const int to save memory
 const int relayPin = 10; // relay cutoff output pin // NEVER USE 13 FOR A RELAY
 const int voltPin = A0; // Voltage Sensor Pin
 const int ampsPin = A3; // Current Sensor Pin
@@ -139,6 +140,9 @@ void setup() {
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin,LOW);
 
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin,HIGH); // turn on green LED
+
   // init LED pins
   for(i = 0; i < NUM_LEDS; i++) {
     pinMode(ledPins[i],OUTPUT);
@@ -188,6 +192,7 @@ void loop() {
 
   //Now show the - Team how hard to pedal.
   if(time - timeDisplay > DISPLAY_INTERVAL){
+    digitalWrite(ledPin,LOW); // turn OFF green LED  
 
     //Serial.println("display");
     // set up the 4D avg cycles
@@ -204,6 +209,8 @@ void loop() {
     printDisplay();
     //readCount = 0;
     timeDisplay = time;
+    digitalWrite(ledPin,HIGH); // turn on green LED  
+    
   }
 
 }

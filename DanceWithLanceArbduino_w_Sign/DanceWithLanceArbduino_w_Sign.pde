@@ -86,7 +86,7 @@ int dangerState = STATE_OFF;
 int blinkState = 0;
 int fastBlinkState = 0;
 
-const float voltcoeff = 13.25;  // larger number interprets as lower voltage
+const float voltcoeff = 13.507;  // larger number interprets as lower voltage
 
 //Voltage related variables.
 int voltsAdc = 0;

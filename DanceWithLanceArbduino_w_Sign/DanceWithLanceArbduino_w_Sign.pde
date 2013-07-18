@@ -1,4 +1,7 @@
 #define BAUD_RATE 2400 // 2400 for use with sign
+// IF DEBUG IS DEFINED, BAUD RATE WILL OVERRIDE TO 57600 SEE Serial.Begin
+#define NODEBUG 0 // DEBUG sets baud rate to 57600, prints much more debugging info
+
 /**** Single-rail Pedalometer
  * Arduino code to run the Dance with Lance Arbduino
  * ver. 1.14
@@ -124,6 +127,9 @@ int y = 0;
 
 void setup() {
   Serial.begin(BAUD_RATE);
+#ifdef DEBUG
+  Serial.begin(57600);  // only if debugging is enabled
+#endif  
 
   Serial.println(versionStr);
 
@@ -256,12 +262,16 @@ void doBuck() {
       if (volts - voltsBuck > BUCK_VOLTAGE + BUCK_HYSTERESIS) { // inverter voltage is too high
         buckPWM -= BUCK_PWM_DOWNJUMP; // reduce PWM value to reduce inverter voltage
         if (buckPWM <= 0) {
-//          Serial.print("0");
+#ifdef DEBUG
+          Serial.print("0");
+#endif          
           buckPWM = 1; // minimum PWM value
         }
         if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
           lastBuckPWM = (int) buckPWM;
-//          Serial.print("-");
+#ifdef DEBUG
+          Serial.print("-");
+#endif          
           analogWrite(9,lastBuckPWM); // actually set the PWM value
         }
       }
@@ -269,11 +279,15 @@ void doBuck() {
         buckPWM += BUCK_PWM_UPJUMP; // increase PWM value to raise inverter voltage
         if (buckPWM > 255.0) {
           buckPWM = 255.0;
-//          Serial.print("X");
+#ifdef DEBUG
+          Serial.print("X");
+#endif          
         }
         if (lastBuckPWM != (int) buckPWM) { // only if the PWM value has changed should we...
           lastBuckPWM = (int) buckPWM;
-//          Serial.print("+");
+#ifdef DEBUG
+          Serial.print("+");
+#endif          
           analogWrite(9,lastBuckPWM); // actually set the PWM value
         }
       }
@@ -482,14 +496,20 @@ void printWattHours(){
 void printDisplay(){
   Serial.print("v: ");
   Serial.print(volts);
-//  Serial.print(", a: ");
-//  Serial.print(amps);
-//  Serial.print(", va: ");
-//  Serial.print(watts);
+#ifdef DEBUG
+  Serial.print(" (");
+  Serial.print(analogRead(voltPin));
+  Serial.print("), a: ");
+  Serial.print(amps);
+  Serial.print(" (");
+  Serial.print(analogRead(ampsPin));
+  Serial.print("), va: ");
+  Serial.print(watts);
 //  Serial.print(", voltsBuck: ");
 //  Serial.print(voltsBuck);
-//  Serial.print(", inverter: ");
-//  Serial.print(volts-voltsBuck);
+  Serial.print(", inverter: ");
+  Serial.print(volts-voltsBuck);
+#endif
 
   //  Serial.print(", Levels ");
   //  for(i = 0; i < NUM_LEDS; i++) {

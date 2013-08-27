@@ -1,7 +1,7 @@
 #define baudrate 2400
 #define CLEAR_TIME 175 // 150 is fine
 #define SET_TIME 150 // 150 is fine
-#define PEDAL_VOLT 32 // voltage below which sign says PEDAL
+#define PEDAL_VOLT 3 // voltage below which sign says PEDAL
 #define CHILL_VOLT 48 // voltage above which sign says CHILL
 #define HYSTERESIS 1 // voltage distance before sign switches back to wattage mode
 

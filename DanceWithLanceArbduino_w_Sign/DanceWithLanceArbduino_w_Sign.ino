@@ -119,7 +119,8 @@ unsigned long timeRead = 0;
 unsigned long timeDisplay = 0;
 unsigned long timeLeds = 0;
 unsigned long wattHourTimer = 0;
-
+unsigned long wattSerial = 0; // this is filled by checkSerial
+int dataReady = false;  // this is set by checkSerial
 
 // var for looping through arrays
 int i = 0;
@@ -163,6 +164,7 @@ void loop() {
   doSafety();
   getAmps();
   readCount++;
+  checkSerial();
   calcWatts();
 
   //  if it's been at least 1/4 second since the last time we measured Watt Hours...
@@ -471,6 +473,7 @@ void calcWatts(){
   watts = volts * amps;
   doKnob();
   watts += knobAdc / 2;
+  watts += wattSerial; // add the number coming over checkSerial()
   //Serial.print("calcWatts: ");
   //Serial.println(watts);
 }

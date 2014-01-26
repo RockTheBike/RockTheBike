@@ -470,7 +470,7 @@ float adc2amps(float adc){
 void calcWatts(){
   watts = volts * amps;
   doKnob();
-  watts += knobAdc / 2;
+  watts += knobAdc * 2.5;
   //Serial.print("calcWatts: ");
   //Serial.println(watts);
 }

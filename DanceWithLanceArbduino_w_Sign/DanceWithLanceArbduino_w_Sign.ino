@@ -24,6 +24,8 @@
 
 char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.14. For best results connect the Sign!";
 
+#include <EEPROM.h>
+
 /*
 
  Check the system voltage.
@@ -75,6 +77,10 @@ const int ampsPin = A3; // Current Sensor Pin
 const int ledPins[NUM_LEDS] = {
   2, 3, 4, 5, 6, 7, 8};
 
+// long-term memory in EEPROM
+#define WATTHOURS_EEPROM_ADDRESS 20
+#define BACKUP_INTERVAL 60*1000
+
 // SPECIAL STATE
 const float MAX_VOLTS = 50.0;  //
 const float RECOVERY_VOLTS = 40.0;
@@ -119,6 +125,7 @@ unsigned long timeRead = 0;
 unsigned long timeDisplay = 0;
 unsigned long timeLeds = 0;
 unsigned long wattHourTimer = 0;
+unsigned long backupTimer = 0;
 unsigned long wattSerial = 0; // this is filled by checkSerial
 int dataReady = false;  // this is set by checkSerial
 
@@ -150,6 +157,8 @@ void setup() {
     digitalWrite(ledPins[i],LOW);
   }
 
+  load_watthours();
+
   timeDisplay = millis();
   setPwmFrequency(9,1); // this sets the frequency of PWM on pins 9 and 10 to 31,250 Hz
   pinMode(9,OUTPUT); // this pin will control the transistors of the huge BUCK converter
@@ -171,6 +180,11 @@ void loop() {
   if (time - wattHourTimer >= 250) {
     calcWattHours();
     wattHourTimer = time; // reset the integrator    
+  }
+
+  if( time - backupTimer >= BACKUP_INTERVAL ) {  // store wattHours into eeprom
+    store_watthours();
+    backupTimer = time;
   }
 
   if(avgCount > AVG_CYCLES && D4Initted){
@@ -592,10 +606,28 @@ void setPwmFrequency(int pin, int divisor) {
   }
 }
 
+union float_and_byte {
+	float f;
+	unsigned char bs[sizeof(float)];
+} fab;
 
+void store_watthours() {
+	Serial.println( "Storing wattHours." );
+	fab.f = wattHours;
+	for( i=0; i<sizeof(float); i++ )
+		EEPROM.write( WATTHOURS_EEPROM_ADDRESS+i, fab.bs[i] );
+}
 
-
-
-
-
-
+void load_watthours() {
+	Serial.print( "Loading watthours bytes 0x" );
+	bool blank = true;
+	for( i=0; i<sizeof(float); i++ ) {
+		fab.bs[i] = EEPROM.read( WATTHOURS_EEPROM_ADDRESS+i );
+		Serial.print( fab.bs[i], HEX );
+		if( blank && fab.bs[i] != 0xff )  blank = false;
+	}
+	wattHours = blank ? 0 : fab.f;
+	Serial.print( ", so wattHours is " );
+	Serial.print( wattHours );
+	Serial.println( "." );
+}

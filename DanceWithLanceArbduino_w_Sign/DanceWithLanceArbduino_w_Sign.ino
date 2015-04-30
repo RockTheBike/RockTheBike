@@ -81,6 +81,8 @@ const int ledPins[NUM_LEDS] = {
 #define WATTHOURS_EEPROM_ADDRESS 20
 #define BACKUP_INTERVAL 60*1000
 
+#define RESET_PIN 12
+
 // SPECIAL STATE
 const float MAX_VOLTS = 50.0;  //
 const float RECOVERY_VOLTS = 40.0;
@@ -151,6 +153,8 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin,HIGH); // turn on green LED
 
+  digitalWrite( RESET_PIN, HIGH );  // we want to read with pullup enabled
+
   // init LED pins
   for(i = 0; i < NUM_LEDS; i++) {
     pinMode(ledPins[i],OUTPUT);
@@ -182,8 +186,13 @@ void loop() {
     wattHourTimer = time; // reset the integrator    
   }
 
-  if( time - backupTimer >= BACKUP_INTERVAL ) {  // store wattHours into eeprom
-    store_watthours();
+  if( digitalRead( RESET_PIN ) ) {  // reset switch is not resetting
+    if( time - backupTimer >= BACKUP_INTERVAL ) {  // store wattHours into eeprom
+      store_watthours();
+      backupTimer = time;
+    }
+  } else {  // reset switch is resetting
+    reset_watthours();
     backupTimer = time;
   }
 
@@ -630,4 +639,9 @@ void load_watthours() {
 	Serial.print( ", so wattHours is " );
 	Serial.print( wattHours );
 	Serial.println( "." );
+}
+
+void reset_watthours() {
+	wattHours = 0;
+	store_watthours();
 }

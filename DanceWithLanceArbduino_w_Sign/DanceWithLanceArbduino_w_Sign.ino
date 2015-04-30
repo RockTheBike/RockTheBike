@@ -164,6 +164,7 @@ void setup() {
   load_watthours();
 
   timeDisplay = millis();
+  digitalWrite(11,HIGH);  // we want to read with pullup enabled
   setPwmFrequency(9,1); // this sets the frequency of PWM on pins 9 and 10 to 31,250 Hz
   pinMode(9,OUTPUT); // this pin will control the transistors of the huge BUCK converter
 }
@@ -173,7 +174,10 @@ void setup() {
 void loop() {
   time = millis();
   getVolts();
-  doBuck(); // adjust inverter voltage
+  if( digitalRead(11) )
+    doBuck(); // adjust inverter voltage
+  else
+    doNoBuck();
   doSafety();
   getAmps();
   readCount++;
@@ -328,6 +332,10 @@ void doBuck() {
   if (volts < BUCK_CUTOUT) { // system voltage is too low for transistors
     digitalWrite(9,LOW); // turn off transistors
   }
+}
+
+void doNoBuck() {
+  digitalWrite( 9, LOW );
 }
 
 void doSafety() {

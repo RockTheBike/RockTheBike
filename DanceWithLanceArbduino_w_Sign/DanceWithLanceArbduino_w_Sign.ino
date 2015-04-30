@@ -82,6 +82,7 @@ const int ledPins[NUM_LEDS] = {
 #define BACKUP_INTERVAL 60*1000
 
 #define RESET_PIN 12
+#define BUCK_ENABLE_PIN 11
 
 // SPECIAL STATE
 const float MAX_VOLTS = 50.0;  //
@@ -164,7 +165,6 @@ void setup() {
   load_watthours();
 
   timeDisplay = millis();
-  digitalWrite(11,HIGH);  // we want to read with pullup enabled
   setPwmFrequency(9,1); // this sets the frequency of PWM on pins 9 and 10 to 31,250 Hz
   pinMode(9,OUTPUT); // this pin will control the transistors of the huge BUCK converter
 }
@@ -174,10 +174,13 @@ void setup() {
 void loop() {
   time = millis();
   getVolts();
-  if( digitalRead(11) )
+  if( digitalRead( BUCK_ENABLE_PIN ) ) {
+    // Serial.print("B");
     doBuck(); // adjust inverter voltage
-  else
+  } else {
+    // Serial.print("b");
     doNoBuck();
+  }
   doSafety();
   getAmps();
   readCount++;

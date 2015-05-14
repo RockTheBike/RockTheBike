@@ -79,7 +79,7 @@ const int ledPins[NUM_LEDS] = {
 
 // long-term memory in EEPROM
 #define WATTHOURS_EEPROM_ADDRESS 20
-#define BACKUP_INTERVAL 60*1000
+#define BACKUP_INTERVAL ((long)60*1000)
 
 #define RESET_PIN 12
 #define BUCK_ENABLE_PIN 11

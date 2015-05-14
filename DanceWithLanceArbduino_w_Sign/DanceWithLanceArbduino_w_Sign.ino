@@ -20,9 +20,11 @@
  * 1.12 - TS => printWatts uses D4Avg instead of watts, 300 baud
  * 1.13 - TS => D4Avg fix, 2400 baud
  * 1.14 - FF => Added CalcWattHours function, changing the Sign's data to Watt Hours, instead of Watts, in time for BMF VII
- * 1.15 - JS => started adding buck converter stuff */
+ * 1.15 - JS => started adding buck converter stuff
+ * 1.16 - MPS => Store energy into EEPROM; reset via James Bond switch
+ */
 
-char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.14. For best results connect the Sign!";
+char versionStr[] = "AC Power Pedal Power Utility Box ver. 1.16. For best results connect the Sign!";
 
 #include <EEPROM.h>
 
